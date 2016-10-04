@@ -1586,7 +1586,7 @@ void PG::activate(ObjectStore::Transaction& t,
     min_last_complete_ondisk = eversion_t(0,0);  // we don't know (yet)!
   }
   last_update_applied = info.last_update;
-  last_rollback_info_trimmed_to_applied = pg_log.get_rollback_trimmed_to();
+  last_rollback_info_trimmed_to_applied = pg_log.get_rolled_forward_to();
 
   need_up_thru = false;
 
@@ -1842,9 +1842,22 @@ void PG::activate(ObjectStore::Transaction& t,
 
     state_set(PG_STATE_ACTIVATING);
   }
-  if (acting.size() >= pool.info.min_size) {
-    /* TODOSAM DNM: verify that this will apply before reads are accepted
-     * on both the replica and the primary
+  if (is_primary()) {
+    projected_last_update = info.last_update;
+  }
+  if (acting.size() >= pool.info.min_size ||
+      pool.info.is_hacky_ecoverwrites()) {
+    /* The reason this is guarded with the above check is that it's not strictly
+     * safe if acting.size < min_size since we aren't actually activating.  In
+     * that case, we might still need to rollback the entries at the head of the
+     * log if an osd comes up with an older log.  If the pool only allows inplace
+     * updates, this is no problem (i.e., no hacky ecoverwrites are enabled).
+     * However, with the rollforward entries implied by ecoverwrites
+     * implementation, not doing the rollforward would leave the on-disk state
+     * out of sync with the log in case of recovery.  For now, we'll just
+     * do the rollforward on an overwrites pool, but before this is used in real
+     * life, recovery reads need to be able to overlay unapplied rollforward
+     * updates.
      *
      * See http://tracker.ceph.com/issues/17158 for the considerations here
      */
@@ -3024,7 +3037,7 @@ void PG::append_log(
 	this,
 	get_osdmap()->get_epoch(),
 	info.last_update));
-  } else if (roll_forward_to > pg_log.get_rollback_trimmed_to()) {
+  } else if (roll_forward_to > pg_log.get_rolled_forward_to()) {
     pg_log.roll_forward_to(
       roll_forward_to,
       &handler);
@@ -4064,6 +4077,14 @@ void PG::chunky_scrub(ThreadPool::TPHandle &handle)
 
         // Don't include temporary objects when scrubbing
         scrubber.start = info.pgid.pgid.get_hobj_start();
+	if (pool.info.is_hacky_ecoverwrites()) {
+	  osd->clog->info() << info.pgid << ": skipping scrub since it's"
+			    << " not supported with overwrites yet.";
+	  scrubber.start = hobject_t::get_max();
+	  scrubber.end = hobject_t::get_max();
+	}
+
+
         scrubber.state = PG::Scrubber::NEW_CHUNK;
 
 	{
@@ -5227,7 +5248,7 @@ ostream& operator<<(ostream& out, const PG& pg)
 
   if (!pg.backfill_targets.empty())
     out << " bft=" << pg.backfill_targets;
-  out << " crt=" << pg.pg_log.get_log().can_rollback_to;
+  out << " crt=" << pg.pg_log.get_rolled_forward_to();
 
   if (pg.last_complete_ondisk != pg.info.last_complete)
     out << " lcod " << pg.last_complete_ondisk;
