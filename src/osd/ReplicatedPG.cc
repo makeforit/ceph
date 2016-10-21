@@ -9710,7 +9710,7 @@ void ReplicatedPG::do_update_log_missing(OpRequestRef &op)
     [=](int) {
       MOSDPGUpdateLogMissing *msg = static_cast<MOSDPGUpdateLogMissing*>(
 	op->get_req());
-      pg->lock();
+      lock();
       if (!pg_has_reset_since(msg->get_epoch())) {
 	MOSDPGUpdateLogMissingReply *reply =
 	  new MOSDPGUpdateLogMissingReply(
@@ -9721,7 +9721,7 @@ void ReplicatedPG::do_update_log_missing(OpRequestRef &op)
 	reply->set_priority(CEPH_MSG_PRIO_HIGH);
 	msg->get_connection()->send_message(reply);
       }
-      pg->unlock();
+      unlock();
     });
 
   /* Hack to work around the fact that ReplicatedBackend sends
