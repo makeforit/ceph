@@ -376,7 +376,7 @@ void PGLog::merge_log(ObjectStore::Transaction& t,
     mark_dirty_from(lower_bound);
 
     // move aside divergent items
-    list<pg_log_entry_t> divergent = log.rewind_from_head(olog.head);
+    list<pg_log_entry_t> divergent = log.rewind_from_head(lower_bound);
     for (auto &&oe: divergent) {
       dout(10) << "merge_log divergent " << oe << dendl;
     }
