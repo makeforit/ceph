@@ -189,31 +189,8 @@ void PGLog::proc_replica_log(
     log.tail :
     first_non_divergent->version;
 
-  list<pg_log_entry_t> divergent;
-  list<pg_log_entry_t>::const_iterator pp = olog.log.end();
-  while (true) {
-    if (pp == olog.log.begin())
-      break;
-
-    --pp;
-    const pg_log_entry_t& oe = *pp;
-
-    // don't continue past the tail of our log.
-    if (oe.version <= log.tail) {
-      ++pp;
-      break;
-    }
-
-    if (oe.version <= lu) {
-      ++pp;
-      break;
-    }
-
-    divergent.push_front(oe);
-  }
-
-
   IndexedLog folog(olog);
+  auto divergent = folog.rewind_from_head(lu);
   _merge_divergent_entries(
     folog,
     divergent,
