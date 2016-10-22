@@ -1522,9 +1522,11 @@ void ReplicatedPG::calc_trim_to()
     target = cct->_conf->osd_max_pg_log_entries;
   }
 
-  assert(min_last_complete_ondisk >= pg_log.get_can_rollback_to());
-  if (pg_log.get_can_rollback_to() != eversion_t() &&
-      pg_log.get_can_rollback_to() != pg_trim_to &&
+  eversion_t limit = MIN(
+    min_last_complete_ondisk,
+    pg_log.get_can_rollback_to());
+  if (limit != eversion_t() &&
+      limit != pg_trim_to &&
       pg_log.get_log().approx_size() > target) {
     size_t num_to_trim = pg_log.get_log().approx_size() - target;
     if (num_to_trim < cct->_conf->osd_pg_log_trim_min) {
@@ -1535,8 +1537,8 @@ void ReplicatedPG::calc_trim_to()
     for (size_t i = 0; i < num_to_trim; ++i) {
       new_trim_to = it->version;
       ++it;
-      if (new_trim_to > pg_log.get_can_rollback_to()) {
-	new_trim_to = pg_log.get_can_rollback_to();
+      if (new_trim_to > limit) {
+	new_trim_to = limit;
 	dout(10) << "calc_trim_to trimming to min_last_complete_ondisk" << dendl;
 	break;
       }
