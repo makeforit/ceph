@@ -51,7 +51,7 @@ void PGLog::IndexedLog::trim(
 		    << " on " << *this << dendl;
   }
 
-  trim_rollback_info_to(s, handler);
+  assert(s <= can_rollback_to);
 
   while (!log.empty()) {
     pg_log_entry_t &e = *log.begin();

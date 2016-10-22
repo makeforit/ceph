@@ -612,7 +612,7 @@ public:
       h);
   }
 
-  eversion_t get_rolled_forward_to() const {
+  eversion_t get_can_rollback_to() const {
     return log.get_can_rollback_to();
   }
 

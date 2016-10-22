@@ -1976,7 +1976,7 @@ bool ECBackend::try_commit_to_rollforward()
 
   completed_to = op->roll_forward_to;
 
-  if (op->version > get_parent()->get_log().get_rolled_forward_to() &&
+  if (op->version > get_parent()->get_log().get_can_rollback_to() &&
       waiting_reads.empty() &&
       waiting_commit.empty()) {
     // submit a dummy transaction to kick the rollforward
@@ -1999,7 +1999,7 @@ bool ECBackend::try_rollforward_to_completion()
     return false;
   Op *op = &(waiting_rollforward.front());
 
-  if (op->version > get_parent()->get_log().get_rolled_forward_to()) {
+  if (op->version > get_parent()->get_log().get_can_rollback_to()) {
     return false;
   }
 

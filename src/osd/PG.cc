@@ -1585,7 +1585,7 @@ void PG::activate(ObjectStore::Transaction& t,
     min_last_complete_ondisk = eversion_t(0,0);  // we don't know (yet)!
   }
   last_update_applied = info.last_update;
-  last_rollback_info_trimmed_to_applied = pg_log.get_rolled_forward_to();
+  last_rollback_info_trimmed_to_applied = pg_log.get_can_rollback_to();
 
   need_up_thru = false;
 
@@ -3024,7 +3024,7 @@ void PG::append_log(
 	this,
 	get_osdmap()->get_epoch(),
 	info.last_update));
-  } else if (roll_forward_to > pg_log.get_rolled_forward_to()) {
+  } else if (roll_forward_to > pg_log.get_can_rollback_to()) {
     pg_log.roll_forward_to(
       roll_forward_to,
       &handler);
@@ -5237,7 +5237,7 @@ ostream& operator<<(ostream& out, const PG& pg)
 
   if (!pg.backfill_targets.empty())
     out << " bft=" << pg.backfill_targets;
-  out << " crt=" << pg.pg_log.get_rolled_forward_to();
+  out << " crt=" << pg.pg_log.get_can_rollback_to();
 
   if (pg.last_complete_ondisk != pg.info.last_complete)
     out << " lcod " << pg.last_complete_ondisk;
