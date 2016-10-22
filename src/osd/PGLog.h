@@ -770,7 +770,7 @@ protected:
 	objiter->second->version >= first_divergent_update) {
       /// Case 1)
       if (objiter->second->version <= last_divergent_update) {
-	ldpp_dout(dpp, 10) << __func__ << ": objiter is " << objiter->second
+	ldpp_dout(dpp, 10) << __func__ << ": objiter is " << *(objiter->second)
 			   << dendl;
 	assert(objiter->second->version > last_divergent_update);
       }
