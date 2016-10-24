@@ -95,11 +95,6 @@ void PGBackend::rollback(
       t->append(vis.t);
     },
     [&](const TransactionInfo::LocalRollForward &lrf) {
-      if (!lrf.extents.empty())
-	trim_stashed_object(entry.soid, lrf.version, t);
-      if (lrf.old_snaps)
-	get_parent()->pgb_set_object_snap_mapping(
-	  entry.soid, *(lrf.old_snaps), t);
     });
 }
 
