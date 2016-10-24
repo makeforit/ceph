@@ -288,7 +288,7 @@ public:
     auto &op = get_object_op(hoid);
     assert(!op.updated_snaps);
     assert(op.buffer_updates.empty());
-    assert(op.truncate);
+    assert(!op.truncate);
     op.updated_snaps = make_pair(
       old_snaps,
       new_snaps);
