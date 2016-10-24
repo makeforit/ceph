@@ -11176,7 +11176,9 @@ uint64_t ReplicatedPG::recover_backfill(
     // ordered before any subsequent updates
     send_remove_op(to_remove[i].get<0>(), to_remove[i].get<1>(), to_remove[i].get<2>());
 
-    pending_backfill_updates[to_remove[i].get<0>()]; // add empty stat!
+    if (cmp(to_remove[i].get<0>(), last_backfill_started,
+	    get_sort_bitwise()) <= 0)
+      pending_backfill_updates[to_remove[i].get<0>()]; // add empty stat!
   }
 
   PGBackend::RecoveryHandle *h = pgbackend->open_recovery_op();
