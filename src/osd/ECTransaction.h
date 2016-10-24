@@ -201,7 +201,6 @@ namespace ECTransaction {
     pg_t pgid,
     const hobject_t &oid,
     const map<string, boost::optional<bufferlist> > &attrs,
-    const boost::optional<set<snapid_t> > &old_snaps,
     const boost::optional<pair<uint64_t, uint64_t> > &truncate,
     const extent_map &partial_extents,
     const PGTransaction::ObjectOperation::buffer_update_type &buffer_updates,
