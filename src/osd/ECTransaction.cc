@@ -116,7 +116,6 @@ void ECTransaction::generate_rollforward(
   pg_t pgid,
   const hobject_t &oid,
   const map<string, boost::optional<bufferlist> > &attrs,
-  const boost::optional<set<snapid_t> > &old_snaps,
   const boost::optional<pair<uint64_t, uint64_t> > &truncate,
   const extent_map &partial_extents,
   const PGTransaction::ObjectOperation::buffer_update_type &buffer_updates,
@@ -130,7 +129,6 @@ void ECTransaction::generate_rollforward(
   DoutPrefixProvider *dpp)
 {
   TransactionInfo::LocalRollForward lrf;
-  lrf.old_snaps = old_snaps;
   lrf.new_attrs = attrs;
   lrf.version = entry.version.version;
 
@@ -670,13 +668,11 @@ void ECTransaction::generate_transactions(
 	    hinfo->get_total_logical_size(sinfo), opair.second)) {
 	auto pextents = partial_extents.find(oid);
 	ldpp_dout(dpp, 20) << __func__ << ": rollforward" << dendl;
+	assert(!opair.second.updated_snaps);
 	generate_rollforward(
 	  pgid,
 	  oid,
 	  opair.second.attr_updates,
-	  opair.second.updated_snaps
-	    ? boost::optional<set<snapid_t> >(opair.second.updated_snaps->first)
-	    : boost::none,
 	  opair.second.truncate,
 	  pextents != partial_extents.end() ? pextents->second : extent_map(),
 	  opair.second.buffer_updates,

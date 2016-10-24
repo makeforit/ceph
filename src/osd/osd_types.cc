@@ -3374,15 +3374,6 @@ void TransactionInfo::dump(Formatter *f, bool dump_attr_values) const
       if (lrf.truncate) {
 	f->dump_stream("truncate") << *(lrf.truncate);
       }
-      if (lrf.old_snaps) {
-	f->open_array_section("old_snaps");
-	for (auto &&snap: *(lrf.old_snaps)) {
-	  f->open_object_section("snap");
-	  f->dump_stream("val") << snap;
-	  f->close_section();
-	}
-	f->close_section();
-      }
       f->open_object_section("extents");
       for (auto &&extent: lrf.extents) {
 	f->open_object_section("extent");
@@ -3459,7 +3450,6 @@ void TransactionInfo::encode(bufferlist &_bl) const
 	__u8 t = 1;
 	::encode(t, _bl);
 	::encode(lrf.new_attrs, _bl);
-	::encode(lrf.old_snaps, _bl);
 	::encode(lrf.truncate, _bl);
 	::encode(lrf.extents, _bl);
 	::encode(lrf.version, _bl);
@@ -3492,7 +3482,6 @@ void TransactionInfo::decode(bufferlist::iterator &_bl)
     } else if (t == 1) {
       LocalRollForward lrf;
       ::decode(lrf.new_attrs, _bl);
-      ::decode(lrf.old_snaps, _bl);
       ::decode(lrf.truncate, _bl);
       ::decode(lrf.extents, _bl);
       ::decode(lrf.version, _bl);

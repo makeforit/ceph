@@ -106,7 +106,7 @@ public:
 
     boost::optional<bufferlist> omap_header;
 
-    /// (old, new)
+    /// (old, new) -- only valid with no truncate or buffer updates
     boost::optional<pair<set<snapid_t>, set<snapid_t> > > updated_snaps;
 
     struct alloc_hint_t {
@@ -284,6 +284,8 @@ public:
     ) {
     auto &op = get_object_op_for_modify(hoid);
     assert(!op.updated_snaps);
+    assert(op.buffer_updates.empty());
+    assert(op.truncate);
     op.updated_snaps = make_pair(
       old_snaps,
       new_snaps);
@@ -303,6 +305,7 @@ public:
     uint64_t off                   ///< [in] offset to truncate to
     ) {
     auto &op = get_object_op_for_modify(hoid);
+    assert(!op.updated_snaps);
     op.buffer_updates.erase(
       off,
       std::numeric_limits<uint64_t>::max() - off);
@@ -360,6 +363,7 @@ public:
     uint32_t fadvise_flags = 0     ///< [in] fadvise hint
     ) {
     auto &op = get_object_op_for_modify(hoid);
+    assert(!op.updated_snaps);
     assert(len > 0);
     assert(len == bl.length());
     op.buffer_updates.insert(
@@ -375,6 +379,7 @@ public:
     uint64_t tooff                 ///< [in] offset
     ) {
     auto &op = get_object_op_for_modify(to);
+    assert(!op.updated_snaps);
     op.buffer_updates.insert(
       tooff,
       len,
@@ -386,6 +391,7 @@ public:
     uint64_t len                   ///< [in] amount to zero
     ) {
     auto &op = get_object_op_for_modify(hoid);
+    assert(!op.updated_snaps);
     op.buffer_updates.insert(
       off,
       len,

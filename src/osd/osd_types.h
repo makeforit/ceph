@@ -2524,7 +2524,6 @@ public:
 
   struct LocalRollForward {
     map<string, boost::optional<bufferlist> > new_attrs;
-    boost::optional<set<snapid_t> > old_snaps;
     boost::optional<uint64_t> truncate;
 
     vector<boost::tuple<uint64_t, uint64_t, uint64_t> > extents;
