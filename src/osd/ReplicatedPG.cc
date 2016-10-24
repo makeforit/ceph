@@ -3682,6 +3682,12 @@ ReplicatedPG::OpContextUPtr ReplicatedPG::trim_object(bool first, const hobject_
 	0)
       );
     t->remove(coid);
+    t->update_snaps(
+      coid,
+      set<snapid_t>(
+	ctx->obc->obs.oi.snaps.begin(),
+	ctx->obc->obs.oi.snaps.end()),
+      set<snapid_t>());
     ctx->at_version.version++;
   } else {
     // save adjusted snaps for this object

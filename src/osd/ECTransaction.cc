@@ -643,7 +643,9 @@ void ECTransaction::generate_transactions(
 	}
       }
 
-      if (entry && opair.second.updated_snaps) {
+      if (entry &&
+	  entry->is_modify() &&
+	  opair.second.updated_snaps) {
 	vector<snapid_t> snaps(
 	  opair.second.updated_snaps->second.begin(),
 	  opair.second.updated_snaps->second.end());

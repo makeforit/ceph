@@ -223,6 +223,9 @@ private:
     assert(!op.is_delete());
     return op;
   }
+  ObjectOperation &get_object_op(const hobject_t &hoid) {
+    return op_map[hoid];
+  }
 public:
   void add_obc(
     ObjectContextRef obc) {
@@ -282,7 +285,7 @@ public:
     const set<snapid_t> &old_snaps,///< [in] old snaps value
     const set<snapid_t> &new_snaps ///< [in] new snaps value
     ) {
-    auto &op = get_object_op_for_modify(hoid);
+    auto &op = get_object_op(hoid);
     assert(!op.updated_snaps);
     assert(op.buffer_updates.empty());
     assert(op.truncate);
