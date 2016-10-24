@@ -95,6 +95,8 @@ void PGBackend::rollback(
       t->append(vis.t);
     },
     [&](const TransactionInfo::LocalRollForward &lrf) {
+      if (!lrf.extents.empty())
+	trim_stashed_object(entry.soid, lrf.version, t);
     });
 }
 
