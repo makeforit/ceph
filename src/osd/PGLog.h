@@ -169,6 +169,8 @@ struct PGLog : DoutPrefixProvider {
       assert(rollback_info_trimmed_to_riter == log.rbegin());
 
       reset_to(o);
+
+      skip_can_rollback_to_to_head();
       index();
     }
 
