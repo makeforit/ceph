@@ -173,7 +173,7 @@ struct PGLog : DoutPrefixProvider {
       assert(rollback_info_trimmed_to == head);
       assert(rollback_info_trimmed_to_riter == log.rbegin());
 
-      *this = IndexedPGLog(o);
+      *this = IndexedLog(o);
 
       skip_can_rollback_to_to_head();
       index();
