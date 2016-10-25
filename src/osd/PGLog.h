@@ -598,7 +598,7 @@ public:
 
   void unindex() { log.unindex(); }
 
-  void add(const pg_log_entry_t& e, bool applied) {
+  void add(const pg_log_entry_t& e, bool applied = true) {
     mark_writeout_from(e.version);
     log.add(e, applied);
   }
@@ -985,7 +985,7 @@ public:
       invalidate_stats = invalidate_stats || !p->is_error();
       if (log) {
 	ldpp_dout(dpp, 20) << "update missing, append " << *p << dendl;
-	log->add(*p, true);
+	log->add(*p);
       }
       if (cmp(p->soid, last_backfill, last_backfill_bitwise) <= 0 &&
 	  !p->is_error()) {
