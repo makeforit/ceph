@@ -2546,7 +2546,7 @@ public:
   }
 
   bool is_rollforward()  const {
-    return boost::get<LocalRollForward*>(&ti_type) != nullptr;
+    return boost::get<LocalRollForward>(&ti_type) != nullptr;
   }
 
   void mark_unrollbackable() {
