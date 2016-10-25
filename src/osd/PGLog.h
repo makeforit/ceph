@@ -419,7 +419,7 @@ struct PGLog : DoutPrefixProvider {
     }
 
     // actors
-    void add(const pg_log_entry_t& e, bool applied) {
+    void add(const pg_log_entry_t& e, bool applied = true) {
       if (!applied) {
 	get_can_rollback_to() == head;
       }
