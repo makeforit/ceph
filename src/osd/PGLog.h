@@ -139,11 +139,23 @@ struct PGLog : DoutPrefixProvider {
       last_requested(0),
       indexed_data(0),
       rollback_info_trimmed_to_riter(log.rbegin()) {
+      reset_rollback_info_trimmed_to_riter();
       index();
     }
 
-    IndexedLog(const IndexedLog &rhs) = delete;
-    IndexedLog &operator=(const IndexedLog &rhs) = delete;
+    IndexedLog(const IndexedLog &rhs) :
+      pg_log_t(rhs),
+      complete_to(log.end()),
+      last_requested(rhs.last_requested),
+      indexed_data(0),
+      rollback_info_trimmed_to_riter(log.rbegin()) {
+      reset_rollback_info_trimmed_to_riter();
+      index(rhs.indexed_data);
+    }
+    IndexedLog &operator=(const IndexedLog &rhs) {
+      *this = IndexedLog(rhs);
+      return *this;
+    }
 
     IndexedLog(IndexedLog &&rhs) = default;
     IndexedLog &operator=(IndexedLog &&rhs) = default;
@@ -298,77 +310,55 @@ struct PGLog : DoutPrefixProvider {
       }
     }
     
-    void index() {
-      objects.clear();
-      caller_ops.clear();
-      extra_caller_ops.clear();
-      for (list<pg_log_entry_t>::iterator i = log.begin();
+    void index(__u16 to_index = PGLOG_INDEXED_ALL) const {
+      if (to_index & PGLOG_INDEXED_OBJECTS)
+	objects.clear();
+      if (to_index & PGLOG_INDEXED_CALLER_OPS)
+	caller_ops.clear();
+      if (to_index & PGLOG_INDEXED_EXTRA_CALLER_OPS)
+	extra_caller_ops.clear();
+
+      for (list<pg_log_entry_t>::const_iterator i = log.begin();
              i != log.end();
              ++i) {
-	if (i->object_is_indexed()) {
-	  objects[i->soid] = &(*i);
+
+	if (to_index & PGLOG_INDEXED_OBJECTS) {
+	  if (i->object_is_indexed()) {
+	    objects[i->soid] = const_cast<pg_log_entry_t*>(&(*i));
+	  }
 	}
 
-        if (i->reqid_is_indexed()) {
-        //assert(caller_ops.count(i->reqid) == 0);  // divergent merge_log indexes new before unindexing old
-          caller_ops[i->reqid] = &(*i);
-        }
+	if (PGLOG_INDEXED_CALLER_OPS) {
+	  if (i->reqid_is_indexed()) {
+	    //assert(caller_ops.count(i->reqid) == 0);  // divergent merge_log indexes new before unindexing old
+	    caller_ops[i->reqid] = const_cast<pg_log_entry_t*>(&(*i));
+	  }
+	}
         
-        for (vector<pair<osd_reqid_t, version_t> >::const_iterator j =
-              i->extra_reqids.begin();
-              j != i->extra_reqids.end();
-              ++j) {
-            extra_caller_ops.insert(make_pair(j->first, &(*i)));
-        }
+	if (PGLOG_INDEXED_EXTRA_CALLER_OPS) {
+	  for (vector<pair<osd_reqid_t, version_t> >::const_iterator j =
+		 i->extra_reqids.begin();
+	       j != i->extra_reqids.end();
+	       ++j) {
+            extra_caller_ops.insert(
+	      make_pair(j->first, const_cast<pg_log_entry_t*>(&(*i))));
+	  }
+	}
       }
         
-      indexed_data = PGLOG_INDEXED_ALL;
-      reset_rollback_info_trimmed_to_riter();
+      indexed_data |= to_index;
     }
 
     void index_objects() const {
-      objects.clear();
-      for (list<pg_log_entry_t>::const_iterator i = log.begin();
-            i != log.end();
-            ++i) {
-	if (i->object_is_indexed()) {
-	  objects[i->soid] = const_cast<pg_log_entry_t*>(&(*i));
-	}
-       }
- 
-      indexed_data |= PGLOG_INDEXED_OBJECTS;
+      index(PGLOG_INDEXED_OBJECTS);
     }
 
     void index_caller_ops() const {
-      caller_ops.clear();
-      for (list<pg_log_entry_t>::const_iterator i = log.begin();
-             i != log.end();
-             ++i) {
-               
-        if (i->reqid_is_indexed()) {
-        //assert(caller_ops.count(i->reqid) == 0);  // divergent merge_log indexes new before unindexing old
-          caller_ops[i->reqid] = const_cast<pg_log_entry_t*>(&(*i));
-        }        
-      }
-        
-      indexed_data |= PGLOG_INDEXED_CALLER_OPS;
+      index(PGLOG_INDEXED_CALLER_OPS);
     }
 
     void index_extra_caller_ops() const {
-      extra_caller_ops.clear();
-      for (list<pg_log_entry_t>::const_iterator i = log.begin();
-             i != log.end();
-             ++i) {
-               
-        for (vector<pair<osd_reqid_t, version_t> >::const_iterator j =
-              i->extra_reqids.begin();
-              j != i->extra_reqids.end();
-              ++j) {
-            extra_caller_ops.insert(make_pair(j->first, const_cast<pg_log_entry_t*>(&(*i))));
-        }
-      }
-        
-      indexed_data |= PGLOG_INDEXED_EXTRA_CALLER_OPS;        
+      index(PGLOG_INDEXED_EXTRA_CALLER_OPS);
     }
 
     void index(pg_log_entry_t& e) {
