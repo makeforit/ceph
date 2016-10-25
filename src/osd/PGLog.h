@@ -985,7 +985,7 @@ public:
       invalidate_stats = invalidate_stats || !p->is_error();
       if (log) {
 	ldpp_dout(dpp, 20) << "update missing, append " << *p << dendl;
-	log->add(*p);
+	log->add(*p, true);
       }
       if (cmp(p->soid, last_backfill, last_backfill_bitwise) <= 0 &&
 	  !p->is_error()) {
