@@ -1944,7 +1944,7 @@ TEST_F(PGLogTest, merge_log_split_missing_entries_at_head) {
 
   t.setup();
   t.set_div_bounds(mk_evt(9, 79), mk_evt(8, 69));
-  t.set_auth_bounds(mk_evt(10, 160), mk_evt(9, 77));
+  t.set_auth_bounds(mk_evt(15, 160), mk_evt(9, 77));
   t.final.add(mk_obj(1), mk_evt(15, 150), mk_evt(8, 70));
   run_test_case(t);
 }
@@ -2018,7 +2018,7 @@ TEST_F(PGLogTest, filter_log_1) {
       pg_log_t filtered, reject;
       pg_log_t::filter_log(
 	pgid, *osdmap, hit_set_namespace, log, filtered, reject);
-      log.claim_log_and_clear_rollback_info(filtered);
+      log = IndexedLog(filtered);
     }
     EXPECT_LE(log.log.size(), (size_t)total);
 
@@ -2028,7 +2028,7 @@ TEST_F(PGLogTest, filter_log_1) {
       pg_log_t filtered, reject;
       pg_log_t::filter_log(
 	pgid, *osdmap, hit_set_namespace, log, filtered, reject);
-      log.claim_log_and_clear_rollback_info(filtered);
+      log = IndexedLog(filtered);
     }
     EXPECT_EQ(log.log.size(), (size_t)total);
 
@@ -2050,7 +2050,7 @@ TEST_F(PGLogTest, filter_log_1) {
       pg_log_t filtered, reject;
       pg_log_t::filter_log(
 	pgid, *osdmap, hit_set_namespace, log, filtered, reject);
-      log.claim_log_and_clear_rollback_info(filtered);
+      log = IndexedLog(filtered);
     }
     EXPECT_LE(log.log.size(), (size_t)total);
 
