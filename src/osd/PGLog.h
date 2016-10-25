@@ -157,8 +157,8 @@ struct PGLog : DoutPrefixProvider {
       return *this;
     }
 
-    IndexedLog(IndexedLog &&rhs) = default;
-    IndexedLog &operator=(IndexedLog &&rhs) = default;
+    IndexedLog(IndexedLog &&rhs) = delete;
+    IndexedLog &operator=(IndexedLog &&rhs) = delete;
 
     void trim_rollback_info_to(eversion_t to, LogEntryHandler *h) {
       advance_can_rollback_to(
