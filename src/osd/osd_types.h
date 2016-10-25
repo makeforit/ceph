@@ -2527,7 +2527,8 @@ public:
     boost::optional<uint64_t> truncate;
 
     vector<boost::tuple<uint64_t, uint64_t, uint64_t> > extents;
-    version_t version = 0; // generation of source object
+    version_t version; // generation of source object
+    LocalRollForward() : version(0) {}
   };
 
 private:
