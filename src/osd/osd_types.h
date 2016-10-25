@@ -2845,10 +2845,6 @@ public:
     return divergent;
   }
 
-  void reset_to(const pg_log_t &rhs) {
-    *this = rhs;
-  }
-
   bool empty() const {
     return log.empty();
   }
