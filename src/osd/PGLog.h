@@ -153,12 +153,10 @@ struct PGLog : DoutPrefixProvider {
       index(rhs.indexed_data);
     }
     IndexedLog &operator=(const IndexedLog &rhs) {
-      *this = IndexedLog(rhs);
+      this->~IndexedLog();
+      new (this) IndexedLog(rhs);
       return *this;
     }
-
-    IndexedLog(IndexedLog &&rhs) = delete;
-    IndexedLog &operator=(IndexedLog &&rhs) = delete;
 
     void trim_rollback_info_to(eversion_t to, LogEntryHandler *h) {
       advance_can_rollback_to(
