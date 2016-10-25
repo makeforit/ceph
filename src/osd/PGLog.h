@@ -133,7 +133,12 @@ struct PGLog : DoutPrefixProvider {
       {}
 
     template <typename... Args>
-    IndexedLog(Args&&... args) : pg_log_t(std::forward<Args>(args)...) {
+    IndexedLog(Args&&... args) :
+      pg_log_t(std::forward<Args>(args)...),
+      complete_to(log.end()),
+      last_requested(0),
+      indexed_data(0),
+      rollback_info_trimmed_to_riter(log.rbegin()) {
       index();
     }
 
