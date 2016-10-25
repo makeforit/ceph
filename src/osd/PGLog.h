@@ -419,7 +419,11 @@ struct PGLog : DoutPrefixProvider {
     }
 
     // actors
-    void add(const pg_log_entry_t& e) {
+    void add(const pg_log_entry_t& e, bool applied) {
+      if (!applied) {
+	get_can_rollback_to() == log.head;
+      }
+
       // add to log
       log.push_back(e);
 
@@ -448,6 +452,10 @@ struct PGLog : DoutPrefixProvider {
        ++j) {
     extra_caller_ops.insert(make_pair(j->first, &(log.back())));
         }
+      }
+
+      if (!applied) {
+	skip_can_rollback_to_to_head();
       }
     }
 
@@ -590,9 +598,9 @@ public:
 
   void unindex() { log.unindex(); }
 
-  void add(const pg_log_entry_t& e) {
+  void add(const pg_log_entry_t& e, bool applied) {
     mark_writeout_from(e.version);
-    log.add(e);
+    log.add(e, applied);
   }
 
   void reset_recovery_pointers() { log.reset_recovery_pointers(); }

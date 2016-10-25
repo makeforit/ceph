@@ -2964,7 +2964,7 @@ void PG::trim_peers()
   }
 }
 
-void PG::add_log_entry(const pg_log_entry_t& e)
+void PG::add_log_entry(const pg_log_entry_t& e, bool applied)
 {
   // raise last_complete only if we were previously up to date
   if (info.last_complete == info.last_update)
@@ -2980,7 +2980,7 @@ void PG::add_log_entry(const pg_log_entry_t& e)
     info.last_user_version = e.user_version;
 
   // log mutation
-  pg_log.add(e);
+  pg_log.add(e, applied);
   dout(10) << "add_log_entry " << e << dendl;
 }
 
@@ -3005,26 +3005,24 @@ void PG::append_log(
   }
   dout(10) << "append_log " << pg_log.get_log() << " " << logv << dendl;
 
-  for (vector<pg_log_entry_t>::const_iterator p = logv.begin();
-       p != logv.end();
-       ++p) {
-    add_log_entry(*p);
-  }
-
   PGLogEntryHandler handler;
   if (!transaction_applied) {
-    pg_log.roll_forward(&handler);
     /* TODOSAM DNM
      * I'm fairly sure this is correct.  We must be a backfill
      * peer, so it's ok if we apply out-of-turn since we won't
      * be considered when determining a min possible last_update.
      */
-    t.register_on_applied(
-      new C_UpdateLastRollbackInfoTrimmedToApplied(
-	this,
-	get_osdmap()->get_epoch(),
-	info.last_update));
-  } else if (roll_forward_to > pg_log.get_can_rollback_to()) {
+    pg_log.roll_forward(&handler);
+    handler.apply(this, &t);
+  }
+
+  for (vector<pg_log_entry_t>::const_iterator p = logv.begin();
+       p != logv.end();
+       ++p) {
+    add_log_entry(*p, transaction_applied);
+  }
+
+  if (transaction_applied && roll_forward_to > pg_log.get_can_rollback_to()) {
     pg_log.roll_forward_to(
       roll_forward_to,
       &handler);
