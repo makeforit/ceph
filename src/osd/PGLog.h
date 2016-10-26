@@ -180,6 +180,7 @@ struct PGLog : DoutPrefixProvider {
     list<pg_log_entry_t> rewind_from_head(eversion_t newhead) {
       list<pg_log_entry_t> divergent = pg_log_t::rewind_from_head(newhead);
       index();
+      reset_rollback_info_trimmed_to_riter();
       return divergent;
     }
 
